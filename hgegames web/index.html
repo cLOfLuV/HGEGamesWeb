@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HGE Games — Horror Game Enthusiast</title>
+<meta name="description" content="HGE Games는 Horror Game Enthusiast의 약자로, 공포게임을 좋아하는 개발자들이 모여 만든 인디 게임 개발사입니다.">
+<meta property="og:title" content="HGE Games — Horror Game Enthusiast">
+<meta property="og:description" content="공포를 향한 도전, 도전이 담긴 게임.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/og-image.jpg">
+<link rel="icon" href="assets/favicon.png" sizes="192x192">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0A0B0E;
+    --void-2:#0d0e13;
+    --ash:#15161c;
+    --ash-2:#1d1e26;
+    --bone:#EAE7E1;
+    --fog:#8b8a93;
+    --fog-dim:#5c5b64;
+    --blood:#c01f2b;
+    --blood-2:#e23b46;
+    --blood-dim:#6f171d;
+    --edge:rgba(234,231,225,0.09);
+    --edge-2:rgba(234,231,225,0.16);
+    --maxw:1180px;
+    --pad:clamp(20px,5vw,64px);
+    --f-en:'Oswald',sans-serif;
+    --f-kr:'Black Han Sans',sans-serif;
+    --f-body:'Noto Sans KR',sans-serif;
+    --f-mono:'Space Mono',monospace;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--void);
+    color:var(--bone);
+    font-family:var(--f-body);
+    font-weight:300;
+    line-height:1.75;
+    letter-spacing:.01em;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  img,video{display:block;max-width:100%}
+  ::selection{background:var(--blood);color:#fff}
+
+  /* ---------- Atmosphere overlays ---------- */
+  .vignette{
+    position:fixed;inset:0;pointer-events:none;z-index:60;
+    background:radial-gradient(120% 90% at 50% 8%, transparent 40%, rgba(0,0,0,.55) 100%);
+    mix-blend-mode:multiply;
+  }
+  .grain{
+    position:fixed;inset:-50%;pointer-events:none;z-index:61;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain 700ms steps(4) infinite;
+  }
+  @keyframes grain{
+    0%{transform:translate(0,0)} 25%{transform:translate(-4%,3%)}
+    50%{transform:translate(3%,-5%)} 75%{transform:translate(-2%,4%)} 100%{transform:translate(4%,-2%)}
+  }
+
+  /* ---------- Layout helpers ---------- */
+  .wrap{max-width:var(--maxw);margin:0 auto;padding-left:var(--pad);padding-right:var(--pad)}
+  section{position:relative;z-index:2}
+  .eyebrow{
+    font-family:var(--f-mono);font-size:12px;font-weight:400;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--blood-2);display:inline-flex;align-items:center;gap:12px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--blood);display:inline-block}
+  .section-head{margin-bottom:clamp(36px,5vw,64px)}
+  .section-title{
+    font-family:var(--f-en);font-weight:600;text-transform:uppercase;
+    font-size:clamp(30px,5.2vw,58px);line-height:1;letter-spacing:.02em;margin-top:18px;
+  }
+
+  /* ---------- Nav ---------- */
+  header.nav{
+    position:fixed;top:0;left:0;right:0;z-index:70;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px var(--pad);
+    transition:background .4s ease,border-color .4s ease,padding .4s ease;
+    border-bottom:1px solid transparent;
+  }
+  header.nav.scrolled{
+    background:rgba(8,9,12,.82);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--edge);padding:11px var(--pad);
+  }
+  .brand{font-family:var(--f-en);font-weight:700;font-size:20px;letter-spacing:.16em;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:8px;height:8px;background:var(--blood);border-radius:50%;box-shadow:0 0 14px var(--blood);animation:pulse 3.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 14px var(--blood)}50%{opacity:.45;box-shadow:0 0 4px var(--blood)}}
+  nav.links{display:flex;gap:30px}
+  nav.links a{font-family:var(--f-mono);font-size:12.5px;letter-spacing:.14em;color:var(--fog);text-transform:uppercase;transition:color .25s;position:relative;padding:4px 0}
+  nav.links a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:1px;background:var(--blood);transition:width .28s}
+  nav.links a:hover,nav.links a:focus-visible{color:var(--bone)}
+  nav.links a:hover::after,nav.links a:focus-visible::after{width:100%}
+  .burger{display:none;background:none;border:1px solid var(--edge-2);color:var(--bone);width:42px;height:38px;border-radius:2px;cursor:pointer;font-size:18px}
+
+  /* ---------- Hero ---------- */
+  .hero{min-height:100svh;display:flex;align-items:center;position:relative;overflow:hidden;z-index:2}
+  .hero-media{position:absolute;inset:0;z-index:0}
+  .hero-media video,.hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42}
+  .hero-media::after{ /* atmospheric fallback so it never looks broken */
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(80% 60% at 72% 30%, rgba(120,20,26,.20), transparent 60%),
+      radial-gradient(60% 60% at 20% 80%, rgba(30,34,48,.5), transparent 60%),
+      linear-gradient(180deg,#0c0d12,#08090c);
+    z-index:-1;
+  }
+  .hero-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(8,9,12,.92) 0%,rgba(8,9,12,.65) 45%,rgba(8,9,12,.35) 100%)}
+  .hero-inner{position:relative;z-index:3;width:100%}
+  .hero .tag-top{margin-bottom:26px}
+  .hero-kr{
+    font-family:var(--f-kr);font-weight:400;
+    font-size:clamp(40px,8.2vw,104px);line-height:1.02;letter-spacing:-.01em;
+    text-shadow:0 2px 40px rgba(0,0,0,.6);
+  }
+  .hero-kr .accent{color:var(--blood-2)}
+  .hero-en{
+    font-family:var(--f-en);font-weight:500;text-transform:uppercase;
+    font-size:clamp(14px,1.9vw,20px);letter-spacing:.34em;color:var(--fog);
+    margin-top:26px;
+  }
+  .hero-lede{max-width:540px;margin-top:30px;color:#b7b5bd;font-size:clamp(14px,1.6vw,16px);line-height:1.9}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:38px}
+  .scroll-cue{
+    position:absolute;bottom:26px;left:var(--pad);z-index:3;
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.28em;color:var(--fog-dim);text-transform:uppercase;
+    display:flex;align-items:center;gap:12px;
+  }
+  .scroll-cue .bar{width:1px;height:34px;background:linear-gradient(var(--blood),transparent);animation:drop 2.2s ease-in-out infinite}
+  @keyframes drop{0%,100%{transform:scaleY(.4);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}}
+  .now-tag{
+    position:absolute;top:96px;right:var(--pad);z-index:3;
+    font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;color:var(--fog);
+    border:1px solid var(--edge-2);padding:7px 12px;border-radius:2px;
+  }
+  .now-tag b{color:var(--blood-2);font-weight:700}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    font-family:var(--f-mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    padding:14px 26px;border-radius:2px;border:1px solid var(--edge-2);color:var(--bone);
+    display:inline-flex;align-items:center;gap:10px;transition:all .25s;cursor:pointer;background:transparent;
+  }
+  .btn:hover,.btn:focus-visible{border-color:var(--bone);transform:translateY(-2px)}
+  .btn.primary{background:var(--blood);border-color:var(--blood)}
+  .btn.primary:hover,.btn.primary:focus-visible{background:var(--blood-2);border-color:var(--blood-2);box-shadow:0 8px 30px rgba(192,31,43,.35)}
+  .btn .arw{transition:transform .25s}
+  .btn:hover .arw{transform:translateX(4px)}
+
+  /* ---------- About ---------- */
+  #about{padding:clamp(90px,12vw,150px) 0}
+  .about-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(40px,6vw,90px);align-items:start}
+  .about-bio p{color:#c4c2c9;margin-bottom:20px;font-size:clamp(15px,1.6vw,16.5px)}
+  .about-bio p:last-child{margin-bottom:0}
+  .about-side{position:sticky;top:110px}
+  .stat-row{border-top:1px solid var(--edge);padding:22px 0;display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+  .stat-row:last-child{border-bottom:1px solid var(--edge)}
+  .stat-k{font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;color:var(--fog);text-transform:uppercase}
+  .stat-v{font-family:var(--f-en);font-weight:600;font-size:clamp(20px,2.4vw,26px);color:var(--bone);text-align:right}
+  .stat-v small{display:block;font-family:var(--f-body);font-weight:300;font-size:12px;color:var(--fog-dim);letter-spacing:0}
+
+  /* ---------- Approach (TEAM acrostic) ---------- */
+  #approach{padding:clamp(80px,10vw,130px) 0;background:linear-gradient(180deg,transparent,rgba(20,21,27,.5),transparent)}
+  .approach-list{border-top:1px solid var(--edge)}
+  .ap-row{
+    display:grid;grid-template-columns:150px 1fr;gap:clamp(20px,4vw,56px);
+    align-items:center;padding:clamp(26px,4vw,44px) 0;border-bottom:1px solid var(--edge);
+    transition:background .35s;
+  }
+  .ap-row:hover{background:rgba(192,31,43,.045)}
+  .ap-letter{
+    font-family:var(--f-en);font-weight:700;font-size:clamp(70px,11vw,132px);line-height:.8;
+    color:transparent;-webkit-text-stroke:1.4px var(--edge-2);text-stroke:1.4px var(--edge-2);
+    transition:color .35s,-webkit-text-stroke-color .35s;letter-spacing:-.02em;
+  }
+  .ap-row:hover .ap-letter{color:var(--blood);-webkit-text-stroke-color:var(--blood)}
+  .ap-word{font-family:var(--f-en);font-weight:600;text-transform:uppercase;font-size:clamp(19px,2.4vw,27px);letter-spacing:.04em}
+  .ap-word span{color:var(--fog);font-family:var(--f-body);font-weight:400;font-size:15px;letter-spacing:0;margin-left:12px}
+  .ap-desc{color:#b4b2ba;margin-top:12px;font-size:15px;max-width:640px;line-height:1.85}
+
+  /* ---------- Games ---------- */
+  #games{padding:clamp(90px,12vw,150px) 0}
+  .games-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,3vw,40px)}
+  .game-card{border:1px solid var(--edge);background:var(--ash);border-radius:4px;overflow:hidden;transition:border-color .35s,transform .35s}
+  .game-card:hover{border-color:var(--edge-2);transform:translateY(-4px)}
+  .game-media{aspect-ratio:16/10;position:relative;background:var(--void-2);overflow:hidden}
+  .game-media img,.game-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .game-body{padding:clamp(22px,3vw,34px)}
+  .game-year{font-family:var(--f-mono);font-size:12px;letter-spacing:.2em;color:var(--blood-2)}
+  .game-title{font-family:var(--f-en);font-weight:600;text-transform:uppercase;font-size:clamp(24px,3vw,36px);margin:8px 0 4px;letter-spacing:.02em}
+  .game-kr-title{font-family:var(--f-kr);font-size:17px;color:var(--fog);margin-bottom:16px}
+  .game-desc{color:#bdbbc3;font-size:15px;line-height:1.85;margin-bottom:24px}
+  .game-foot{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .status-pill{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);border:1px solid var(--edge-2);padding:8px 13px;border-radius:2px}
+  .status-pill.soon{color:var(--blood-2);border-color:var(--blood-dim)}
+
+  /* media placeholder */
+  .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:16px}
+  .ph::before{content:"◆";color:var(--blood-dim);font-size:20px}
+  .ph span{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--fog-dim);text-transform:uppercase;line-height:1.7}
+  .has-media .ph{display:none}
+
+  /* ---------- Members ---------- */
+  #members{padding:clamp(80px,10vw,130px) 0;background:linear-gradient(180deg,transparent,rgba(20,21,27,.5),transparent)}
+  .members-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:clamp(18px,2.4vw,30px)}
+  .member{border:1px solid var(--edge);background:var(--ash);border-radius:4px;padding:26px;transition:border-color .35s,transform .35s}
+  .member:hover{border-color:var(--edge-2);transform:translateY(-3px)}
+  .member.lead{grid-column:span 2}
+  .m-photo{width:74px;height:74px;border-radius:50%;position:relative;overflow:hidden;background:var(--void-2);border:1px solid var(--edge-2);margin-bottom:18px}
+  .m-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .m-photo .ph::before{font-size:15px}
+  .m-photo .ph span{display:none}
+  .m-name{font-family:var(--f-en);font-weight:600;text-transform:uppercase;font-size:20px;letter-spacing:.03em}
+  .m-role{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;color:var(--blood-2);text-transform:uppercase;margin-top:5px}
+  .m-blurb{color:#b4b2ba;font-size:14px;line-height:1.8;margin-top:16px}
+  .m-mail{font-family:var(--f-mono);font-size:12px;color:var(--fog);margin-top:14px;word-break:break-all;transition:color .25s}
+  a.m-mail:hover{color:var(--blood-2)}
+
+  /* ---------- History (log) ---------- */
+  #history{padding:clamp(90px,12vw,150px) 0}
+  .log{border-left:1px solid var(--edge);margin-left:8px}
+  .log-item{position:relative;padding:0 0 34px 34px}
+  .log-item:last-child{padding-bottom:0}
+  .log-item::before{content:"";position:absolute;left:-5px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--void);border:1.5px solid var(--blood-dim);transition:all .3s}
+  .log-item:hover::before{background:var(--blood);border-color:var(--blood);box-shadow:0 0 12px var(--blood)}
+  .log-date{font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;color:var(--blood-2)}
+  .log-title{font-family:var(--f-en);font-weight:500;text-transform:uppercase;font-size:clamp(17px,2vw,22px);letter-spacing:.02em;margin-top:3px}
+  .log-sub{color:var(--fog);font-size:14px;margin-top:2px}
+
+  /* ---------- Contact ---------- */
+  #contact{padding:clamp(90px,12vw,160px) 0;text-align:center}
+  .contact-kr{font-family:var(--f-kr);font-size:clamp(30px,6vw,66px);line-height:1.15;margin:20px auto 0;max-width:14ch}
+  .contact-kr .accent{color:var(--blood-2)}
+  .contact-links{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:46px}
+  .c-link{
+    font-family:var(--f-mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--edge);padding:15px 24px;border-radius:2px;color:var(--bone);
+    display:inline-flex;align-items:center;gap:10px;transition:all .25s;
+  }
+  .c-link:hover,.c-link:focus-visible{border-color:var(--blood);color:var(--blood-2);transform:translateY(-2px)}
+  .c-link .k{color:var(--fog-dim)}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--edge);padding:40px var(--pad);position:relative;z-index:2}
+  .foot-in{max-width:var(--maxw);margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+  .foot-brand{font-family:var(--f-en);font-weight:700;letter-spacing:.16em;font-size:16px}
+  .foot-meta{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;color:var(--fog-dim);line-height:1.9}
+  .foot-links{display:flex;gap:20px}
+  .foot-links a{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;color:var(--fog);text-transform:uppercase;transition:color .25s}
+  .foot-links a:hover{color:var(--bone)}
+
+  /* ---------- Reveal ---------- */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.6,.2,1),transform .8s cubic-bezier(.2,.6,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:900px){
+    .about-grid{grid-template-columns:1fr}
+    .about-side{position:static}
+    .games-grid{grid-template-columns:1fr}
+    .member.lead{grid-column:span 1}
+    nav.links{
+      position:fixed;inset:0 0 auto 0;top:0;flex-direction:column;gap:0;
+      background:rgba(8,9,12,.97);backdrop-filter:blur(14px);
+      padding:86px var(--pad) 34px;border-bottom:1px solid var(--edge);
+      transform:translateY(-102%);transition:transform .4s cubic-bezier(.4,0,.2,1);
+    }
+    nav.links.open{transform:translateY(0)}
+    nav.links a{padding:16px 0;border-bottom:1px solid var(--edge);font-size:15px}
+    .burger{display:block}
+    .now-tag{display:none}
+  }
+  @media(max-width:520px){
+    .ap-row{grid-template-columns:76px 1fr;gap:20px}
+    .contact-links{flex-direction:column}
+    .c-link{justify-content:center}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;scroll-behavior:auto!important}
+    .reveal{opacity:1;transform:none;transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <a href="#home" class="brand"><span class="dot"></span>HGE GAMES</a>
+  <nav class="links" id="menu" aria-label="주요 메뉴">
+    <a href="#about">ABOUT</a>
+    <a href="#approach">APPROACH</a>
+    <a href="#games">GAMES</a>
+    <a href="#members">MEMBERS</a>
+    <a href="#history">HISTORY</a>
+    <a href="#contact">CONTACT</a>
+  </nav>
+  <button class="burger" id="burger" aria-label="메뉴 열기" aria-expanded="false">☰</button>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="home">
+  <div class="hero-media" id="heroMedia">
+    <!-- 히어로 영상/GIF를 여기 넣으세요. 예: assets/hero.mp4 (또는 hero.gif → <img>로 교체) -->
+    <video autoplay muted loop playsinline poster="assets/hero-poster.jpg"
+           onloadeddata="this.parentElement.classList.add('has-hero')">
+      <source src="assets/hero.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-scrim" aria-hidden="true"></div>
+
+  <div class="now-tag">NOW PLAYING · <b>FOR ZEKYLL</b> (2025)</div>
+
+  <div class="wrap hero-inner">
+    <span class="eyebrow tag-top">Game Development Company</span>
+    <h1 class="hero-kr">공포를 향한 도전,<br><span class="accent">도전이 담긴</span> 게임</h1>
+    <p class="hero-en">Challenge for the game, game with challenges</p>
+    <p class="hero-lede">HGE Games는 Horror Game Enthusiast의 약자로, 공포게임을 좋아하는 개발자들이 모여서 만들어진 회사입니다. 다양한 전시회에서 게임을 전시하고, 글로벌 출시를 통한 인디게임의 도약을 꿈꾸고 있습니다.</p>
+    <div class="hero-cta">
+      <a href="#games" class="btn primary">게임 보기 <span class="arw">→</span></a>
+      <a href="https://store.steampowered.com/app/3857650/" target="_blank" rel="noopener" class="btn">Steam 페이지</a>
+    </div>
+  </div>
+
+  <div class="scroll-cue"><span class="bar"></span>SCROLL</div>
+</section>
+
+<!-- ===================== ABOUT ===================== -->
+<section id="about">
+  <div class="wrap">
+    <div class="about-grid">
+      <div class="reveal">
+        <div class="section-head">
+          <span class="eyebrow">Team Bio</span>
+          <h2 class="section-title">우리가<br>만드는 것</h2>
+        </div>
+        <div class="about-side">
+          <div class="stat-row"><span class="stat-k">Founded By</span><span class="stat-v">Enthusiasts<small>공포게임을 사랑하는 개발자들</small></span></div>
+          <div class="stat-row"><span class="stat-k">Focus</span><span class="stat-v">Narrative Horror<small>서사 중심의 몰입형 공포</small></span></div>
+          <div class="stat-row"><span class="stat-k">Exhibited</span><span class="stat-v">10+ Events<small>2025 국내외 전시</small></span></div>
+        </div>
+      </div>
+      <div class="about-bio reveal">
+        <p>HGE Games는 공포 게임의 몰입도와 내러티브 중심 게임의 감성을 결합하여, 독창적인 방식으로 플레이어의 감정과 상상력을 자극하는 인디게임을 제작하는 개발사입니다.</p>
+        <p>스토리 중심의 진행, 선택지 기반의 다중 엔딩, 그리고 감각적인 연출로 기억에 남는 경험을 만드는 것이 저희의 목표입니다.</p>
+        <p>초기 아이디어의 확장부터 전시회 출품까지, 각자의 영역에서 최선을 다하며 함께 성장하고 있습니다.</p>
+        <p>각 팀원은 아직 '전문가'가 아니지만, 모든 구성원이 게임 개발을 통해 '한 단계 더 나아가는 경험'을 만들고자 노력합니다.</p>
+        <p>완성도 높은 게임을 위해 꾸준한 피드백과 재설계를 반복하며, 유저와 함께 게임을 완성해가는 팀입니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== APPROACH ===================== -->
+<section id="approach">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Team Approach</span>
+      <h2 class="section-title">T · E · A · M</h2>
+    </div>
+    <div class="approach-list">
+      <div class="ap-row reveal">
+        <div class="ap-letter">T</div>
+        <div>
+          <div class="ap-word">Transparency <span>투명성</span></div>
+          <p class="ap-desc">서로의 열린 소통과 명확한 역할 공유를 통해, 누구나 프로젝트의 방향성을 이해하고 기여할 수 있는 구조를 지향합니다.</p>
+        </div>
+      </div>
+      <div class="ap-row reveal">
+        <div class="ap-letter">E</div>
+        <div>
+          <div class="ap-word">Empathy <span>공감</span></div>
+          <p class="ap-desc">공포는 감정에서 시작된다고 믿습니다. 플레이어의 감정선을 설계하는 것처럼, 서로의 공감과 이해를 바탕으로 협업을 진행합니다.</p>
+        </div>
+      </div>
+      <div class="ap-row reveal">
+        <div class="ap-letter">A</div>
+        <div>
+          <div class="ap-word">Adaptability <span>유연성</span></div>
+          <p class="ap-desc">빠르게 변화하는 상황과 피드백에 유연하게 대응합니다. 구조적인 리팩토링, 스토리 흐름의 수정, 디자인 변경 등 플레이어 경험을 중심으로 유기적인 개발을 진행합니다.</p>
+        </div>
+      </div>
+      <div class="ap-row reveal">
+        <div class="ap-letter">M</div>
+        <div>
+          <div class="ap-word">Meaning <span>의미 중심</span></div>
+          <p class="ap-desc">게임의 모든 요소는 이야기와 감정이라는 목적을 위해 설계됩니다. 한 장면, 한 대사, 한 개의 오브젝트까지도 플레이어의 기억에 남을 '의미 있는 경험'을 만드는 것이 목표입니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GAMES ===================== -->
+<section id="games">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Games</span>
+      <h2 class="section-title">우리의 작품</h2>
+    </div>
+    <div class="games-grid">
+      <!-- FOR ZEKYLL -->
+      <article class="game-card reveal">
+        <div class="game-media">
+          <!-- assets/for-zekyll.gif (또는 .jpg/.mp4) 넣으세요 -->
+          <img src="assets/for-zekyll.gif" alt="FOR ZEKYLL 게임 이미지"
+               onload="this.closest('.game-media').classList.add('has-media')">
+          <div class="ph"><span>assets/for-zekyll.gif<br>이미지 · GIF · 영상</span></div>
+        </div>
+        <div class="game-body">
+          <div class="game-year">2025 · RELEASED</div>
+          <h3 class="game-title">FOR ZEKYLL</h3>
+          <p class="game-kr-title">〈지킬을 위하여〉</p>
+          <p class="game-desc">1인칭 3D 공포스릴러와 비주얼노벨을 결합한 새로운 장르의 몰입형 공포게임입니다.</p>
+          <div class="game-foot">
+            <span class="status-pill">Released</span>
+            <a href="https://store.steampowered.com/app/3857650/" target="_blank" rel="noopener" class="btn primary">Steam <span class="arw">→</span></a>
+          </div>
+        </div>
+      </article>
+      <!-- 버츄얼 드림 -->
+      <article class="game-card reveal">
+        <div class="game-media">
+          <!-- assets/virtual-dream.jpg (또는 .gif/.mp4) 넣으세요 -->
+          <img src="assets/virtual-dream.jpg" alt="버츄얼 드림 게임 이미지"
+               onload="this.closest('.game-media').classList.add('has-media')">
+          <div class="ph"><span>assets/virtual-dream.jpg<br>이미지 · GIF · 영상</span></div>
+        </div>
+        <div class="game-body">
+          <div class="game-year">2026 · IN DEVELOPMENT</div>
+          <h3 class="game-title">Virtual Dream</h3>
+          <p class="game-kr-title">〈버츄얼 드림〉</p>
+          <p class="game-desc">HGE Creator와 협업하여 진행하는 프로젝트로, 버츄얼 스트리머 100명이 등장하는 세계 최초 대규모 버츄얼 미소녀 연애 시뮬레이터 게임입니다.</p>
+          <div class="game-foot">
+            <span class="status-pill soon">Coming Soon</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MEMBERS ===================== -->
+<section id="members">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Members</span>
+      <h2 class="section-title">사람들</h2>
+    </div>
+    <div class="members-grid">
+      <!-- Director -->
+      <div class="member lead reveal">
+        <div class="m-name">Kyle, Kwon</div>
+        <div class="m-role">Director &amp; Producer</div>
+        <p class="m-blurb">개발자이자 HGE Games의 디렉터, 대표입니다. 전반적인 개발과 운영을 총괄하고 있습니다. 몰입도 높은 서사와 감정 중심의 연출을 통해 강렬한 경험 전달을 목표로 하고 있습니다.</p>
+        <a href="mailto:kyle@hgegames.com" class="m-mail">kyle@hgegames.com</a>
+      </div>
+      <!-- Lead Programmer -->
+      <div class="member lead reveal">
+        <div class="m-name">Jong-Min, Lee</div>
+        <div class="m-role">Lead Programmer</div>
+        <p class="m-blurb">한 줄의 코드에도 이유를 담는 개발자입니다. 끊임없이 배우고 도전하며, 제가 만든 세계에 생명을 불어넣습니다. 완성보다 성장에 집중하는 프로그래머가 되겠습니다.</p>
+        <a href="mailto:whdals1125@naver.com" class="m-mail">whdals1125@naver.com</a>
+      </div>
+      <!-- Programmers -->
+      <div class="member reveal">
+        <div class="m-name">Do-Kyung, Oh</div>
+        <div class="m-role">Programmer</div>
+      </div>
+      <div class="member reveal">
+        <div class="m-name">Yoon-Sun, Lee</div>
+        <div class="m-role">Programmer</div>
+      </div>
+      <div class="member reveal">
+        <div class="m-name">Hyun-Ho, Lee</div>
+        <div class="m-role">Programmer</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HISTORY ===================== -->
+<section id="history">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">History · 2025</span>
+      <h2 class="section-title">걸어온 길</h2>
+    </div>
+    <div class="log reveal">
+      <div class="log-item"><div class="log-date">2025 · CROWDFUNDING</div><div class="log-title">텀블벅 크라우드 펀딩 510% 달성</div><div class="log-sub">tumblbug · 목표 초과 달성</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">ILLUSTAR FES 8</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">Build 051 오프라인 전시</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">Seoul Popcon</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">서울 코믹월드 인디게임 전시</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">DCCF</div></div>
+      <div class="log-item"><div class="log-date">2025 · RANKING</div><div class="log-title">스토브 스토어 인기순위 2위 달성</div><div class="log-sub">STOVE Game Top 2</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">도쿄게임쇼 (TGS) 전시</div></div>
+      <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">콘텐츠 유니버스 &amp; PGC Korea</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section id="contact">
+  <div class="wrap">
+    <span class="eyebrow reveal" style="justify-content:center">Contact</span>
+    <h2 class="contact-kr reveal">함께<br><span class="accent">도전</span>하시겠어요?</h2>
+    <div class="contact-links reveal">
+      <a class="c-link" href="mailto:kyle@hgegames.com"><span class="k">EMAIL</span> kyle@hgegames.com</a>
+      <a class="c-link" href="https://www.youtube.com/@TeamHGE" target="_blank" rel="noopener"><span class="k">YOUTUBE</span> @TeamHGE</a>
+      <a class="c-link" href="https://x.com/HGE_Creator" target="_blank" rel="noopener"><span class="k">X</span> @HGE_Creator</a>
+      <a class="c-link" href="https://store.steampowered.com/app/3857650/" target="_blank" rel="noopener"><span class="k">STEAM</span> Store Page</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="foot-in">
+    <div>
+      <div class="foot-brand">HGE GAMES</div>
+      <div class="foot-meta">Horror Game Enthusiast · 공포를 향한 도전, 도전이 담긴 게임<br>© 2025 HGE Games. All rights reserved.</div>
+    </div>
+    <div class="foot-links">
+      <a href="#home">TOP</a>
+      <a href="#games">GAMES</a>
+      <a href="#contact">CONTACT</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav background on scroll
+  var nav=document.getElementById('nav');
+  var onScroll=function(){nav.classList.toggle('scrolled',window.scrollY>40)};
+  onScroll();window.addEventListener('scroll',onScroll,{passive:true});
+
+  // Mobile menu
+  var burger=document.getElementById('burger'),menu=document.getElementById('menu');
+  burger.addEventListener('click',function(){
+    var open=menu.classList.toggle('open');
+    burger.setAttribute('aria-expanded',open);
+    burger.textContent=open?'✕':'☰';
+  });
+  menu.addEventListener('click',function(e){
+    if(e.target.tagName==='A'){menu.classList.remove('open');burger.textContent='☰';burger.setAttribute('aria-expanded','false');}
+  });
+
+  // Scroll reveal
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');obs.unobserve(en.target);}});
+  },{threshold:.14,rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+  // Hide hero video wrapper cleanly if source missing (keeps atmospheric fallback)
+  var heroVid=document.querySelector('#heroMedia video');
+  if(heroVid){heroVid.addEventListener('error',function(){this.style.display='none';});}
+</script>
+</body>
+</html>
