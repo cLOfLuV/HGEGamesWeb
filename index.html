@@ -250,6 +250,30 @@
   .c-link:hover,.c-link:focus-visible{border-color:var(--blood);color:var(--blood-2);transform:translateY(-2px)}
   .c-link .k{color:var(--fog-dim)}
 
+  /* ---------- HGE Creator ---------- */
+  #creator{padding:clamp(70px,9vw,110px) 0}
+  .creator-card{
+    border:1px solid var(--edge);border-radius:6px;overflow:hidden;
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(192,31,43,.14), transparent 55%),
+      linear-gradient(180deg,var(--ash),var(--void-2));
+    display:grid;grid-template-columns:auto 1fr;align-items:center;
+    gap:clamp(28px,5vw,64px);padding:clamp(30px,5vw,60px);
+    position:relative;
+  }
+  .creator-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blood)}
+  .creator-logo{width:clamp(120px,15vw,168px);height:auto;opacity:.95;filter:drop-shadow(0 6px 24px rgba(0,0,0,.5))}
+  .creator-name{font-family:var(--f-en);font-weight:700;text-transform:uppercase;font-size:clamp(26px,3.4vw,40px);letter-spacing:.04em;margin:14px 0 2px}
+  .creator-tagline{font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;color:var(--blood-2);text-transform:uppercase}
+  .creator-desc{color:#c4c2c9;font-size:clamp(14.5px,1.6vw,16px);line-height:1.9;margin:20px 0 26px;max-width:640px}
+  .creator-points{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:30px}
+  .creator-points li{
+    list-style:none;font-family:var(--f-mono);font-size:12px;letter-spacing:.04em;color:var(--fog);
+    border:1px solid var(--edge-2);border-radius:2px;padding:9px 13px;
+  }
+  .creator-points li b{color:var(--bone);font-weight:700}
+  .btn-logo{height:20px;width:auto;display:inline-block}
+
   /* ---------- Footer ---------- */
   footer{border-top:1px solid var(--edge);padding:40px var(--pad);position:relative;z-index:2}
   .foot-in{max-width:var(--maxw);margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
@@ -269,6 +293,9 @@
     .about-side{position:static}
     .games-grid{grid-template-columns:1fr}
     .member.lead{grid-column:span 1}
+    .creator-card{grid-template-columns:1fr;text-align:center;justify-items:center}
+    .creator-card .creator-desc{margin-left:auto;margin-right:auto}
+    .creator-points{justify-content:center}
     nav.links{
       position:fixed;inset:0 0 auto 0;top:0;flex-direction:column;gap:0;
       background:rgba(8,9,12,.97);backdrop-filter:blur(14px);
@@ -305,6 +332,7 @@
     <a href="#games">GAMES</a>
     <a href="#members">MEMBERS</a>
     <a href="#history">HISTORY</a>
+    <a href="#creator">CREATOR</a>
     <a href="#contact">CONTACT</a>
   </nav>
   <button class="burger" id="burger" aria-label="메뉴 열기" aria-expanded="false">☰</button>
@@ -508,6 +536,32 @@
       <div class="log-item"><div class="log-date">2025 · RANKING</div><div class="log-title">스토브 스토어 인기순위 2위 달성</div><div class="log-sub">STOVE Game Top 2</div></div>
       <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">도쿄게임쇼 (TGS) 전시</div></div>
       <div class="log-item"><div class="log-date">2025 · EXHIBITION</div><div class="log-title">콘텐츠 유니버스 &amp; PGC Korea</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HGE CREATOR ===================== -->
+<section id="creator">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Our Platform</span>
+      <h2 class="section-title">홍보는 HGE Creator</h2>
+    </div>
+    <div class="creator-card reveal">
+      <img class="creator-logo" src="assets/hge-creator-logo-white.png" alt="HGE Creator 로고">
+      <div>
+        <div class="creator-tagline">Game × Creator Collaboration</div>
+        <div class="creator-name">HGE Creator</div>
+        <p class="creator-desc">게임시장과 뉴미디어 업계의 상생을 위해 다양한 활동을 진행하는 자체 홍보 플랫폼입니다.<br><br>스트리밍과 창작을 통하여 게임을 알리고, 게임을 통해 더 많은 컨텐츠를 제공하며, 궁극적으로 게임 스트리밍 시장 전체를 키우려는 목표를 가지고 있습니다.</p>
+        <ul class="creator-points">
+          <li>국내외 <b>30개</b> 게임사 &amp; 행사와 스트리밍 콜라보 진행</li>
+          <li><b>1,500+</b> 인디게임 특화 크리에이터</li>
+        </ul>
+        <a class="btn primary" href="https://hgecreator.com/" target="_blank" rel="noopener">
+          <img class="btn-logo" src="assets/hge-creator-logo-white.png" alt="">
+          HGE Creator 바로가기 <span class="arw">→</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>
